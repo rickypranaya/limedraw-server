@@ -8,7 +8,9 @@ const socket = require("socket.io")
 const io = socket(server, {
     cors: {
       origin: "https://limedrawio.herokuapp.com/",
-      methods: ["GET", "POST"]
+      methods: ["GET", "POST"],
+      allowedHeaders: ["my-custom-header"],
+      credentials: true
     }});
 
 
