@@ -18,7 +18,7 @@ const socketToRoom = {};
 const drawers = {}; // all the current drawers
 const words = {}; // all the current draw words
 const starts = {}
-
+const answers = {}
 
 io.on('connection', socket => {
 
@@ -78,6 +78,13 @@ io.on('connection', socket => {
 
     socket.on("add point", data =>{
         rooms[data.roomID] = data.user;
+        answers[data.roomID].push(data.id);
+
+        if(answers[data.roomID].length === rooms[data.roomID]){
+            answers[data.roomID] = []
+            io.emit("all answer", data.roomID)
+        }
+
         if(data.user[0].user.points >= 100){
             
             starts[data.roomID].forEach(function(part, index) {
@@ -124,6 +131,7 @@ io.on('connection', socket => {
         let room = rooms[roomID];
         let snapshots = userSnapshot[roomID]
         let start = starts[roomID]
+        let answer = answers[roomID]
         if (room) {
             var activeUser = room
             var self = room
@@ -133,7 +141,9 @@ io.on('connection', socket => {
             snapshots = snapshots.filter(obj => obj.id !== socket.id)
             userSnapshot[roomID] = snapshots
             start = start.filter(obj => obj.id !== socket.id)
+            answer = answer.filter(obj => obj !== socket.id)
             starts[roomID] = start
+            answers[roomID] = answer
             socket.broadcast.emit("disconnected", {roomID: roomID, usersInThisRoom: activeUser, userdisconnect : self, snapShots: snapshots});
             // socket.broadcast.emit("peers", activeUser );
         }
