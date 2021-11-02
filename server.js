@@ -12,7 +12,7 @@ const io = socket(server, {
     }});
 
 
-const users = {}; // all the users
+const rooms = {}; // all the rooms
 const userSnapshot ={}
 const socketToRoom = {};
 const drawers = {}; // all the current drawers
@@ -33,35 +33,39 @@ io.on('connection', socket => {
     socket.on('add answer', obj => {
         io.emit("add answer replied", {roomID: obj.roomID, answer: obj.answer});
     });
+
+    socket.on('checkroom', ()=>{
+        
+    })
     
     socket.on('join room', obj => {
         io.emit("welcome", {roomID: obj.roomID, user: obj.user});
         
-        if (users[obj.roomID]) {
-            const length = users[obj.roomID].length;
+        if (rooms[obj.roomID]) {
+            const length = rooms[obj.roomID].length;
 
             if (length === 6) {
                 socket.emit("room full");
                 return;
             }
 
-            users[obj.roomID].push({id: socket.id, user: obj.user});
+            rooms[obj.roomID].push({id: socket.id, user: obj.user});
             starts[obj.roomID].push({id: socket.id, start: true});
             userSnapshot[obj.roomID].push({id: socket.id, user: obj.user});
 
         } else {
             userSnapshot[obj.roomID] = [{id: socket.id, user: obj.user}];
             starts[obj.roomID]=[{id: socket.id, start: true}];
-            users[obj.roomID] = [{id: socket.id, user: obj.user}];
+            rooms[obj.roomID] = [{id: socket.id, user: obj.user}];
         }
 
         socketToRoom[socket.id] = obj.roomID;
 
-        io.emit("all users", {roomID: obj.roomID, usersInThisRoom: users[obj.roomID], userSnapshot:  userSnapshot[obj.roomID]});
-        const usersExcludeinRoom = users[obj.roomID].filter(obj => obj.id !== socket.id);
+        io.emit("all users", {roomID: obj.roomID, usersInThisRoom: rooms[obj.roomID], userSnapshot:  userSnapshot[obj.roomID]});
+        const usersExcludeinRoom = rooms[obj.roomID].filter(obj => obj.id !== socket.id);
         
         // socket.broadcast.emit('user-connected', {roomID: obj.roomID, user: socket.id})
-        io.emit("peers",  {roomID: obj.roomID, user: users[obj.roomID]});
+        io.emit("peers",  {roomID: obj.roomID, user: rooms[obj.roomID]});
     });
 
     socket.on("canvas-data", data =>{
@@ -73,7 +77,7 @@ io.on('connection', socket => {
     })
 
     socket.on("add point", data =>{
-        users[data.roomID] = data.user;
+        rooms[data.roomID] = data.user;
         if(data.user[0].user.points >= 100){
             
             starts[data.roomID].forEach(function(part, index) {
@@ -117,7 +121,7 @@ io.on('connection', socket => {
 
     socket.on('disconnect', () => {
         const roomID = socketToRoom[socket.id];
-        let room = users[roomID];
+        let room = rooms[roomID];
         let snapshots = userSnapshot[roomID]
         let start = starts[roomID]
         if (room) {
@@ -125,7 +129,7 @@ io.on('connection', socket => {
             var self = room
             activeUser = activeUser.filter(obj => obj.id !== socket.id);
             self = self.filter(obj => obj.id == socket.id);
-            users[roomID] = activeUser;
+            rooms[roomID] = activeUser;
             snapshots = snapshots.filter(obj => obj.id !== socket.id)
             userSnapshot[roomID] = snapshots
             start = start.filter(obj => obj.id !== socket.id)
