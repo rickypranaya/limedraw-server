@@ -80,7 +80,7 @@ io.on('connection', socket => {
         rooms[data.roomID] = data.user;
         answers[data.roomID].push(data.id);
 
-        if(answers[data.roomID].length === rooms[data.roomID]){
+        if(answers[data.roomID].length === rooms[data.roomID] - 1){
             answers[data.roomID] = []
             io.emit("all answer", data.roomID)
         }
