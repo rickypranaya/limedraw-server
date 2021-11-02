@@ -78,7 +78,12 @@ io.on('connection', socket => {
 
     socket.on("add point", data =>{
         rooms[data.roomID] = data.user;
-        answers[data.roomID].push(data.id);
+
+        if (answers[data.roomID]){
+            answers[data.roomID].push(data.id)
+        } else {
+            answers[data.roomID] = [data.id]
+        }
 
         if(answers[data.roomID].length === rooms[data.roomID].length - 1){
             answers[data.roomID] = []
@@ -93,6 +98,11 @@ io.on('connection', socket => {
             io.emit("game over", data )
         }
         socket.broadcast.emit("add point", data)
+    })
+
+    socket.on("minus point", data =>{
+        rooms[data.roomID] = data.user;
+        socket.broadcast.emit("minus point", data)
     })
 
     socket.on("start", data =>{
@@ -141,9 +151,11 @@ io.on('connection', socket => {
             snapshots = snapshots.filter(obj => obj.id !== socket.id)
             userSnapshot[roomID] = snapshots
             start = start.filter(obj => obj.id !== socket.id)
-            answer = answer.filter(obj => obj !== socket.id)
+            if (answer)  {
+                answer= answer.filter(obj => obj !== socket.id)
+                answers[roomID] = answer
+            }
             starts[roomID] = start
-            answers[roomID] = answer
             socket.broadcast.emit("disconnected", {roomID: roomID, usersInThisRoom: activeUser, userdisconnect : self, snapShots: snapshots});
             // socket.broadcast.emit("peers", activeUser );
         }
