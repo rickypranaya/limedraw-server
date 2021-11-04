@@ -131,8 +131,32 @@ io.on('connection', socket => {
     socket.on("playagain", data =>{
         idx = starts[data.roomID].findIndex((obj => obj.id == data.id));
         starts[data.roomID][idx].start = true
-        io.emit("playagain", {roomID : data.roomID, snapshot : userSnapshot[data.roomID]})
+        socket.emit("playagain", {roomID : data.roomID, snapshot : userSnapshot[data.roomID]})
 
+   })
+
+   socket.on("updateRef",data=>{
+    socket.emit("updateRef", data)
+    })
+
+   socket.on("mute", data=>{
+    var idx = rooms[data.roomID].findIndex((obj => obj.id == data.id));
+    if(idx>-1){
+        rooms[data.roomID][idx].user.mute = true
+    }
+
+    socket.broadcast.emit("mute", data)
+    
+    
+   })
+
+   socket.on("unmute", data=>{
+    var idx = rooms[data.roomID].findIndex((obj => obj.id == data.id));
+    if(idx>-1){
+        rooms[data.roomID][idx].user.mute = false
+    }
+
+    socket.broadcast.emit("unmute", data)
    })
 
 
@@ -171,5 +195,3 @@ io.on('connection', socket => {
 });
 
 server.listen(process.env.PORT || 5000, () => console.log('server is running on port 5000'));
-
-
